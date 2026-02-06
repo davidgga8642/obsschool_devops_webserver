@@ -2,6 +2,7 @@ pipeline {
   agent any
 
   stages {
+
     stage('Checkout') {
       steps {
         checkout scm
@@ -12,7 +13,15 @@ pipeline {
       parallel {
         stage('Pruebas de SAST') {
           steps {
-            echo 'Ejecución de pruebas de SAST'
+            script {
+              def scannerHome = tool 'SonarScanner'
+              withSonarQubeEnv('SonarQube') {
+                bat "\"${scannerHome}\\bin\\sonar-scanner.bat\""
+              }
+              timeout(time: 2, unit: 'MINUTES') {
+                waitForQualityGate abortPipeline: false
+              }
+            }
           }
         }
 
@@ -26,17 +35,18 @@ pipeline {
 
     stage('Configurar archivo') {
       steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'Credentials_DevOps',
-          usernameVariable: 'DEVOPS_USER',
-          passwordVariable: 'DEVOPS_PASS'
-        )]) {
-          bat '''
-            @echo off
-            echo [credentials]> credentials.ini
-            echo user=%DEVOPS_USER%>> credentials.ini
-            echo password=%DEVOPS_PASS%>> credentials.ini
-          '''
+        script {
+          withCredentials([usernamePassword(
+            credentialsId: 'Credentials_DevOps',
+            usernameVariable: 'USER',
+            passwordVariable: 'PASS'
+          )]) {
+            bat """
+              echo [credentials] > credentials.ini
+              echo user=%USER% >> credentials.ini
+              echo password=%PASS% >> credentials.ini
+            """
+          }
         }
       }
     }
@@ -50,7 +60,8 @@ pipeline {
 
   post {
     always {
-      archiveArtifacts artifacts: 'credentials.ini', fingerprint: true
+      // Guardar el archivo como artefacto del job
+      archiveArtifacts artifacts: 'credentials.ini', fingerprint: true, onlyIfSuccessful: false
     }
   }
 }
