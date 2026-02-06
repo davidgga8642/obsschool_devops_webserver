@@ -19,21 +19,38 @@ pipeline {
         stage('Imprimir Env') {
           steps {
             echo "WORKSPACE: ${env.WORKSPACE}"
-            // Alternativa también válida:
-            // sh 'echo "WORKSPACE: $WORKSPACE"'   // (en Linux)
-            // bat 'echo WORKSPACE: %WORKSPACE%'  // (en Windows)
           }
+        }
+      }
+    }
+
+    stage('Configurar archivo') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'Credentials_DevOps',
+          usernameVariable: 'DEVOPS_USER',
+          passwordVariable: 'DEVOPS_PASS'
+        )]) {
+          bat '''
+            @echo off
+            echo [credentials]> credentials.ini
+            echo user=%DEVOPS_USER%>> credentials.ini
+            echo password=%DEVOPS_PASS%>> credentials.ini
+          '''
         }
       }
     }
 
     stage('Build') {
       steps {
-        // Si estás en Windows y tienes Docker Desktop funcionando:
         bat 'docker build -t devops_ws .'
-        // Si fuera Linux:
-        // sh 'docker build -t devops_ws .'
       }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'credentials.ini', fingerprint: true
     }
   }
 }
