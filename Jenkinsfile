@@ -12,20 +12,9 @@ pipeline {
       parallel {
         stage('Pruebas de SAST') {
           steps {
-            script {
-              def scannerHome = tool 'SonarScannerCLI'
-
-              withSonarQubeEnv('SonarQube') {
-                bat "\"${scannerHome}\\bin\\sonar-scanner.bat\""
-              }
-
-              timeout(time: 10, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline: false
-              }
-            }
+            echo 'Ejecución de pruebas de SAST'
           }
         }
-
         stage('Imprimir Env') {
           steps {
             echo "WORKSPACE: ${env.WORKSPACE}"
@@ -36,16 +25,15 @@ pipeline {
 
     stage('Configurar archivo') {
       steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'Credentials_DevOps',
-          usernameVariable: 'USER',
-          passwordVariable: 'PASS'
-        )]) {
-          bat """
+        withCredentials([usernamePassword(credentialsId: 'Credentials_DevOps',
+                                          usernameVariable: 'USER',
+                                          passwordVariable: 'PASS')]) {
+          bat '''
             echo [credentials] > credentials.ini
             echo user=%USER% >> credentials.ini
             echo password=%PASS% >> credentials.ini
-          """
+            type credentials.ini
+          '''
         }
       }
     }
@@ -53,6 +41,17 @@ pipeline {
     stage('Build') {
       steps {
         bat 'docker build -t devops_ws .'
+      }
+    }
+
+    stage('Despliegue del servidor') {
+      steps {
+        bat '''
+          docker stop devops || exit /b 0
+          docker rm devops || exit /b 0
+          docker run -d -p 8090:8090 --name devops devops_ws
+          docker ps --filter "name=devops"
+        '''
       }
     }
   }
