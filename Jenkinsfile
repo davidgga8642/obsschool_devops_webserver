@@ -13,15 +13,12 @@ pipeline {
         stage('Pruebas de SAST') {
           steps {
             script {
-              // 1) Cargar el SonarScanner CLI instalado en Jenkins
               def scannerHome = tool 'SonarScannerCLI'
 
-              // 2) Ejecutar análisis con variables del servidor Sonar configurado en Jenkins
               withSonarQubeEnv('SonarQube') {
-                bat "\"%scannerHome%\\bin\\sonar-scanner.bat\""
+                bat "\"${scannerHome}\\bin\\sonar-scanner.bat\""
               }
 
-              // 3) Esperar el Quality Gate sin abortar pipeline
               timeout(time: 2, unit: 'MINUTES') {
                 waitForQualityGate abortPipeline: false
               }
