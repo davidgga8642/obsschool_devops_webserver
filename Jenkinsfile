@@ -10,7 +10,7 @@ pipeline {
 
     stage('Pruebas de SAST') {
       steps {
-        staticAnalysis(abortPipeline: false)
+        staticAnalysis(branchName: 'main')
       }
     }
 
