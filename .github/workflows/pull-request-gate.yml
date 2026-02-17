@@ -1,0 +1,36 @@
+name: pull-request-gate
+
+on:
+  pull_request:
+
+jobs:
+  pr_gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Analizar el código
+        run: echo "Realizando análisis de SAST"
+
+      - name: Comprobar allow_pull_request.txt
+        id: check
+        shell: bash
+        run: |
+          if [ -f "allow_pull_request.txt" ]; then
+            echo "allow=true" >> $GITHUB_OUTPUT
+            echo "Archivo allow_pull_request.txt encontrado"
+          else
+            echo "allow=false" >> $GITHUB_OUTPUT
+            echo "Archivo allow_pull_request.txt NO encontrado"
+          fi
+
+      - name: Permitir Pull Request
+        if: steps.check.outputs.allow == 'true'
+        run: echo "Permitiendo Pull Request"
+
+      - name: Impedir Pull Request
+        if: steps.check.outputs.allow != 'true'
+        run: |
+          echo "Build fallida. Impidiendo Pull Request"
+          exit 1
