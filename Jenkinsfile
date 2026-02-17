@@ -10,13 +10,13 @@ pipeline {
 
     stage('Pruebas de SAST') {
       steps {
-        sh 'echo "Ejecución de pruebas de SAST"'
+        bat 'echo Ejecución de pruebas de SAST'
       }
     }
 
     stage('Build') {
       steps {
-        sh 'docker build -t devops_ws .'
+        bat 'docker build -t devops_ws .'
       }
     }
   }
