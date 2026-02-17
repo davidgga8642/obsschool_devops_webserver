@@ -1,16 +1,16 @@
+@Library('obsschool-sharedlib') _
+
 pipeline {
   agent any
 
   stages {
     stage('Checkout') {
-      steps {
-        checkout scm
-      }
+      steps { checkout scm }
     }
 
     stage('Pruebas de SAST') {
       steps {
-        bat 'echo Ejecución de pruebas de SAST'
+        staticAnalysis(abortPipeline: false)
       }
     }
 
