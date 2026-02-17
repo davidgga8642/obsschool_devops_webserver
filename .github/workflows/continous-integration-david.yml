@@ -1,0 +1,24 @@
+name: continous-integration-david
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pruebas de SAST
+        run: echo "Ejecución de pruebas de SAST"
+
+      - name: Crear credentials.ini
+        run: |
+          sed "s/\${USERNAME}/${{ secrets.USERNAME }}/g; s/\${PASSWORD}/${{ secrets.PASSWORD }}/g" credentials.ini.tpl > credentials.ini
+          echo "Contenido de credentials.ini:"
+          cat credentials.ini
+
+      - name: Build docker image
+        run: |
+          docker build -t devops_ws . --tag devops_ws_:$(date +%s)
