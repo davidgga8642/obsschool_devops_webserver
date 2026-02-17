@@ -1,3 +1,5 @@
+@Library('obsschool-sharedlib') _
+
 pipeline {
   agent any
 
@@ -41,6 +43,12 @@ pipeline {
     stage('Build') {
       steps {
         bat 'docker build -t devops_ws .'
+      }
+    }
+
+    stage('Static Analysis') {
+      steps {
+        staticAnalysis(abortPipeline: false)
       }
     }
 
